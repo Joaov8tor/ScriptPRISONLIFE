@@ -1,0 +1,165 @@
+-- Criar o ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.CoreGui
+
+-- Criar o botão de "Painel"
+local panelButton = Instance.new("TextButton")
+panelButton.Parent = screenGui
+panelButton.Size = UDim2.new(0, 100, 0, 50)
+panelButton.Position = UDim2.new(0, 10, 0, 10)
+panelButton.Text = "Painel"
+panelButton.BackgroundColor3 = Color3.new(1, 1, 1)
+panelButton.TextColor3 = Color3.new(0, 0, 0)
+
+-- Criar o painel de funcionalidades
+local panelFrame = Instance.new("Frame")
+panelFrame.Parent = screenGui
+panelFrame.Size = UDim2.new(0, 200, 0, 380)
+panelFrame.Position = UDim2.new(0, 10, 0, 70)
+panelFrame.BackgroundColor3 = Color3.new(0.9, 0.9, 0.9)
+panelFrame.Visible = false
+
+-- Função para mostrar/ocultar o painel
+panelButton.MouseButton1Click:Connect(function()
+    panelFrame.Visible = not panelFrame.Visible
+end)
+
+-- Criar o botão de pegar todas as armas
+local getAllWeaponsButton = Instance.new("TextButton")
+getAllWeaponsButton.Parent = panelFrame
+getAllWeaponsButton.Size = UDim2.new(0, 180, 0, 30)
+getAllWeaponsButton.Position = UDim2.new(0, 10, 0, 10)
+getAllWeaponsButton.Text = "Pegar Todas as Armas"
+getAllWeaponsButton.BackgroundColor3 = Color3.new(1, 1, 1)
+getAllWeaponsButton.TextColor3 = Color3.new(0, 0, 0)
+
+getAllWeaponsButton.MouseButton1Click:Connect(function()
+    -- Adicionar lógica para pegar as armas do jogo (exemplo)
+    for _, v in pairs(game.Workspace.Prison_ITEMS.giver:GetChildren()) do
+        game.Players.LocalPlayer.Backpack:Insert(v.ITEMPICKUP:Clone())
+    end
+end)
+
+-- Criar o TextBox para ajustar a velocidade
+local speedTextBox = Instance.new("TextBox")
+speedTextBox.Parent = panelFrame
+speedTextBox.Size = UDim2.new(0, 180, 0, 30)
+speedTextBox.Position = UDim2.new(0, 10, 0, 50)
+speedTextBox.PlaceholderText = "Ajustar Velocidade"
+speedTextBox.BackgroundColor3 = Color3.new(1, 1, 1)
+speedTextBox.TextColor3 = Color3.new(0, 0, 0)
+
+speedTextBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local speed = tonumber(speedTextBox.Text)
+        if speed then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = speed
+        end
+    end
+end)
+
+-- Criar o TextBox para ajustar a altura do pulo
+local jumpTextBox = Instance.new("TextBox")
+jumpTextBox.Parent = panelFrame
+jumpTextBox.Size = UDim2.new(0, 180, 0, 30)
+jumpTextBox.Position = UDim2.new(0, 10, 0, 90)
+jumpTextBox.PlaceholderText = "Ajustar Altura do Pulo"
+jumpTextBox.BackgroundColor3 = Color3.new(1, 1, 1)
+jumpTextBox.TextColor3 = Color3.new(0, 0, 0)
+
+jumpTextBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        local jumpHeight = tonumber(jumpTextBox.Text)
+        if jumpHeight then
+            game.Players.LocalPlayer.Character.Humanoid.JumpPower = jumpHeight
+        end
+    end
+end)
+
+-- Função para atravessar paredes (NoClip)
+local noClipEnabled = false
+local noClipButton = Instance.new("TextButton")
+noClipButton.Parent = panelFrame
+noClipButton.Size = UDim2.new(0, 180, 0, 30)
+noClipButton.Position = UDim2.new(0, 10, 0, 130)
+noClipButton.Text = "Ativar Atravessar Paredes"
+noClipButton.BackgroundColor3 = Color3.new(1, 1, 1)
+noClipButton.TextColor3 = Color3.new(0, 0, 0)
+
+local function setNoClipState(enabled)
+    noClipEnabled = enabled
+    noClipButton.Text = enabled and "Desativar Atravessar Paredes" or "Ativar Atravessar Paredes"
+    game:GetService("RunService").Stepped:Connect(function()
+        if noClipEnabled then
+            for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
+            end
+        else
+            for _, part in pairs(game.Players.LocalPlayer.Character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CanCollide = true
+                end
+            end
+        end
+    end)
+end
+
+noClipButton.MouseButton1Click:Connect(function()
+    setNoClipState(not noClipEnabled)
+end)
+
+-- Função ESP para jogadores com cor vermelha
+local espEnabled = false
+local espButton = Instance.new("TextButton")
+espButton.Parent = panelFrame
+espButton.Size = UDim2.new(0, 180, 0, 30)
+espButton.Position = UDim2.new(0, 10, 0, 170)
+espButton.Text = "Ativar ESP (Vermelho)"
+espButton.BackgroundColor3 = Color3.new(1, 1, 1)
+espButton.TextColor3 = Color3.new(0, 0, 0)
+
+local function createESP(player)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local espBox = Instance.new("BoxHandleAdornment")
+        espBox.Size = Vector3.new(4, 6, 4)
+        espBox.Color3 = Color3.new(1, 0, 0) -- Vermelho
+        espBox.Transparency = 0.5
+        espBox.AlwaysOnTop = true
+        espBox.ZIndex = 5
+        espBox.Adornee = player.Character.HumanoidRootPart
+        espBox.Parent = player.Character.HumanoidRootPart
+    end
+end
+
+espButton.MouseButton1Click:Connect(function()
+    espEnabled = not espEnabled
+    if espEnabled then
+        espButton.Text = "Desativar ESP"
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer then
+                createESP(player)
+            end
+        end
+    else
+        espButton.Text = "Ativar ESP (Vermelho)"
+        for _, player in pairs(game.Players:GetPlayers()) do
+            if player.Character then
+                for _, adornment in pairs(player.Character:GetChildren()) do
+                    if adornment:IsA("BoxHandleAdornment") then
+                        adornment:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+game.Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        if espEnabled then
+            createESP(player)
+        end
+    end)
+end)
